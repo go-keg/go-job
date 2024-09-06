@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/eiixy/go-job/report/qyweixin"
 	syslog "log"
 	"os"
 	"time"
 
 	"github.com/eiixy/go-job"
+	"github.com/eiixy/go-job/report/qyweixin"
 	"github.com/go-kratos/kratos/v2/log"
 	"golang.org/x/time/rate"
 )
