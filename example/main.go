@@ -18,8 +18,16 @@ func main() {
 	j := job.NewJob(
 		log.DefaultLogger,
 		job.NewWorker("test", example),
-		job.NewWorker("test-with-limiter", example, job.WithLimiter(rate.NewLimiter(rate.Every(time.Second), 10))),
-		job.NewWorker("test-with-report-error", example, job.WithReport(report.NewQYWeiXinReport(os.Getenv("QY_WECHAT_TOKEN")))),
+		job.NewWorker(
+			"test-with-limiter",
+			example,
+			job.WithLimiter(rate.NewLimiter(rate.Every(time.Second), 10)),
+		),
+		job.NewWorker(
+			"test-with-report-error",
+			example,
+			job.WithReport(report.NewQYWeiXinReport(os.Getenv("QY_WECHAT_TOKEN"))),
+		),
 	)
 	err := j.Start(context.Background())
 	if err != nil {
