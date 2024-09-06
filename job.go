@@ -30,7 +30,7 @@ func (j Job) Start(ctx context.Context) error {
 	var wg sync.WaitGroup
 	for _, item := range j.works {
 		wg.Add(1)
-		go func(ctx2 context.Context, worker *Worker) {
+		go func(worker *Worker) {
 			for {
 				select {
 				case <-ctx.Done():
@@ -40,14 +40,14 @@ func (j Job) Start(ctx context.Context) error {
 					if worker.reStartLimiter.Allow() {
 						if os.Getenv("JOB_ENABLE") != "false" {
 							j.log.Info("start job:", worker.name)
-							j.run(ctx2, worker)
+							j.run(ctx, worker)
 						}
 					} else {
 						time.Sleep(worker.sleep)
 					}
 				}
 			}
-		}(ctx, item)
+		}(item)
 	}
 	wg.Wait()
 	return nil
@@ -64,6 +64,12 @@ func (j Job) run(ctx context.Context, work *Worker) {
 				err = fmt.Errorf("%v", r)
 			}
 			j.log.Error(err, "panic", "stack", "...\n"+string(buf))
+			if work.reportError != nil {
+				reportErr := work.reportError.Report(ctx, fmt.Errorf("panic:\nerror: %s\nstack: %s", err, buf))
+				if reportErr != nil {
+					j.log.Errorw("method", "report", "err", reportErr)
+				}
+			}
 		}
 	}()
 	for {
