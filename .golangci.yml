@@ -9,7 +9,6 @@ linters-settings: # https://golangci-lint.run/usage/configuration/#linters-setti
     sections:
       - standard
       - default
-      - localmodule
     custom-order: true
   gofmt:
     simplify: false

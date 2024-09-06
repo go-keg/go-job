@@ -7,11 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-kratos/kratos/v2/log"
-	"golang.org/x/time/rate"
-
 	"github.com/eiixy/go-job"
 	"github.com/eiixy/go-job/report"
+	"github.com/go-kratos/kratos/v2/log"
+	"golang.org/x/time/rate"
 )
 
 func main() {
