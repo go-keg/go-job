@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/eiixy/go-job/report/qyweixin"
 	syslog "log"
 	"os"
 	"time"
 
 	"github.com/eiixy/go-job"
-	"github.com/eiixy/go-job/report"
 	"github.com/go-kratos/kratos/v2/log"
 	"golang.org/x/time/rate"
 )
@@ -26,7 +26,7 @@ func main() {
 			"test-with-report-error",
 			example,
 			job.WithLimiter(rate.NewLimiter(rate.Every(time.Second), 1)),
-			job.WithReport(report.NewQYWeiXinReport(os.Getenv("QY_WECHAT_TOKEN"))),
+			job.WithReport(qyweixin.NewReport(os.Getenv("QY_WECHAT_TOKEN"))),
 		),
 	)
 	err := j.Start(context.Background())

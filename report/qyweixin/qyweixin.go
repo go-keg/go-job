@@ -1,4 +1,4 @@
-package report
+package qyweixin
 
 import (
 	"bytes"
@@ -13,26 +13,33 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type QYWeiXinReport struct {
+type Report struct {
 	endpoint    string
 	accessToken string
 	client      http.Client
 	limiter     *rate.Limiter
 }
 
-type QYWeiXinReportFunc func(report *QYWeiXinReport)
+type ReportFunc func(report *Report)
 
-func WithReportLimiter(limiter *rate.Limiter) QYWeiXinReportFunc {
-	return func(report *QYWeiXinReport) {
+func WithLimiter(limiter *rate.Limiter) ReportFunc {
+	return func(report *Report) {
 		report.limiter = limiter
 	}
 }
 
-func NewQYWeiXinReport(token string, opts ...QYWeiXinReportFunc) *QYWeiXinReport {
-	r := &QYWeiXinReport{
+func WithTimeout(duration time.Duration) ReportFunc {
+	return func(report *Report) {
+		report.client.Timeout = duration
+	}
+}
+
+func NewReport(token string, opts ...ReportFunc) *Report {
+	r := &Report{
 		endpoint:    "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?",
 		accessToken: token,
 		limiter:     rate.NewLimiter(rate.Every(time.Second*10), 1),
+		client:      http.Client{Timeout: time.Second * 3},
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -40,16 +47,12 @@ func NewQYWeiXinReport(token string, opts ...QYWeiXinReportFunc) *QYWeiXinReport
 	return r
 }
 
-func (r QYWeiXinReport) Report(ctx context.Context, err error) error {
-	err2 := r.limiter.Wait(ctx)
-	if err2 != nil {
-		return err2
-	}
-	return r.SendText(err.Error())
+func (r Report) Report(ctx context.Context, err error) error {
+	return r.sendText(ctx, err.Error())
 }
 
-func (r QYWeiXinReport) SendText(content string) error {
-	return r.sendMessage(map[string]any{
+func (r Report) sendText(ctx context.Context, content string) error {
+	return r.sendMessage(ctx, map[string]any{
 		"msgtype": "text",
 		"text": map[string]any{
 			"content": content,
@@ -58,7 +61,11 @@ func (r QYWeiXinReport) SendText(content string) error {
 	})
 }
 
-func (r QYWeiXinReport) sendMessage(data map[string]any) error {
+func (r Report) sendMessage(ctx context.Context, data map[string]any) error {
+	err := r.limiter.Wait(ctx)
+	if err != nil {
+		return err
+	}
 	s, _ := json.Marshal(data)
 	reader := bytes.NewReader(s)
 	resp, err := r.client.Post(r.endpoint+"key="+r.accessToken, "application/json", reader)

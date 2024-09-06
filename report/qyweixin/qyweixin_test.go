@@ -1,4 +1,4 @@
-package report
+package qyweixin
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func TestQYWeiXinReport_Report(t *testing.T) {
 		{"", args{errors.New("test error")}, false},
 	}
 	ctx := context.Background()
-	r := NewQYWeiXinReport(os.Getenv("QY_WECHAT_TOKEN"))
+	r := NewReport(os.Getenv("QY_WECHAT_TOKEN"))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := r.Report(ctx, tt.args.err); (err != nil) != tt.wantErr {
