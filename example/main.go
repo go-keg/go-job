@@ -15,21 +15,19 @@ import (
 )
 
 func main() {
-	j := job.NewJob(log.DefaultLogger,
-		job.NewWorker("todo", todo,
-			job.WithLimiter(rate.NewLimiter(rate.Every(time.Second), 3)),
-			job.WithReport(report.NewQYWeiXinReport(os.Getenv("QY_WECHAT_TOKEN"))),
-		),
+	j := job.NewJob(
+		log.DefaultLogger,
+		job.NewWorker("test", example),
+		job.NewWorker("test-with-limiter", example, job.WithLimiter(rate.NewLimiter(rate.Every(time.Second), 10))),
+		job.NewWorker("test-with-report-error", example, job.WithReport(report.NewQYWeiXinReport(os.Getenv("QY_WECHAT_TOKEN")))),
 	)
-	// ctx, _ := context.WithTimeout(context.Background(), 8*time.Second)
-	ctx := context.Background()
-	err := j.Start(ctx)
+	err := j.Start(context.Background())
 	if err != nil {
 		panic(err)
 	}
 }
 
-func todo(ctx context.Context) error {
+func example(ctx context.Context) error {
 	syslog.Println("do something...")
 	if time.Now().Second()%10 == 1 {
 		// test report error
