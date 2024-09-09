@@ -42,13 +42,22 @@ func WithLimiter(limiter *rate.Limiter) WorkerOption {
 	}
 }
 
+func WithLimiterDuration(duration time.Duration) WorkerOption {
+	return func(worker *Worker) {
+		worker.limiter = rate.NewLimiter(rate.Every(duration), 1)
+	}
+}
+
 func NewWorker(name string, job Handler, opts ...WorkerOption) *Worker {
 	w := &Worker{
-		name:           name,
-		job:            job,
-		limiter:        rate.NewLimiter(rate.Every(time.Minute), 1),
+		name: name,
+		job:  job,
+		// 默认每分钟执行1次任务
+		limiter: rate.NewLimiter(rate.Every(time.Minute), 1),
+		// 默认每小时最多重启5次任务
 		reStartLimiter: rate.NewLimiter(rate.Every(time.Hour), 5),
-		sleep:          time.Second,
+		// 限流不通过时的休眠时间，默认为 1s
+		sleep: time.Second,
 	}
 	for _, opt := range opts {
 		opt(w)
