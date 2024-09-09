@@ -16,7 +16,7 @@ import (
 type Report struct {
 	endpoint    string
 	accessToken string
-	client      http.Client
+	client      *http.Client
 	limiter     *rate.Limiter
 }
 
@@ -39,7 +39,7 @@ func NewReport(token string, opts ...ReportFunc) *Report {
 		endpoint:    "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?",
 		accessToken: token,
 		limiter:     rate.NewLimiter(rate.Every(time.Second*10), 1),
-		client:      http.Client{Timeout: time.Second * 3},
+		client:      &http.Client{Timeout: time.Second * 3},
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -68,7 +68,12 @@ func (r Report) sendMessage(ctx context.Context, data map[string]any) error {
 	}
 	s, _ := json.Marshal(data)
 	reader := bytes.NewReader(s)
-	resp, err := r.client.Post(r.endpoint+"key="+r.accessToken, "application/json", reader)
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, r.endpoint+"key="+r.accessToken, reader)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	resp, err := r.client.Do(request)
 	if err != nil {
 		return err
 	}
