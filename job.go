@@ -12,14 +12,23 @@ import (
 )
 
 type Job struct {
-	works []*Worker
-	log   *log.Helper
+	works       []*Worker
+	reportError ReportError
+	log         *log.Helper
 }
 
 func NewJob(logger log.Logger, works ...*Worker) *Job {
 	return &Job{
 		log:   log.NewHelper(log.With(logger, "module", "job")),
 		works: works,
+	}
+}
+
+func NewJobWithReport(logger log.Logger, report ReportError, works ...*Worker) *Job {
+	return &Job{
+		log:         log.NewHelper(log.With(logger, "module", "job")),
+		works:       works,
+		reportError: report,
 	}
 }
 
@@ -64,8 +73,12 @@ func (j Job) run(ctx context.Context, work *Worker) {
 				err = fmt.Errorf("%v", r)
 			}
 			j.log.Errorw("worker", work.name, "err", "panic stack...\n"+string(buf))
-			if work.reportError != nil {
-				reportErr := work.reportError.Report(ctx, fmt.Errorf("panic:\nerror: %s\nworker: %s\nstack: %s", err, work.name, buf))
+			report := work.reportError
+			if report == nil && j.reportError != nil {
+				report = j.reportError
+			}
+			if report != nil {
+				reportErr := report.Report(ctx, fmt.Errorf("panic:\nerror: %s\nworker: %s\nstack: %s", err, work.name, buf))
 				if reportErr != nil {
 					j.log.Errorw("method", "report", "worker", work.name, "err", reportErr)
 				}
@@ -80,8 +93,12 @@ func (j Job) run(ctx context.Context, work *Worker) {
 			if work.limiter.Allow() {
 				err := work.job(ctx)
 				if err != nil {
-					if work.reportError != nil {
-						reportErr := work.reportError.Report(ctx, err)
+					report := work.reportError
+					if report == nil && j.reportError != nil {
+						report = j.reportError
+					}
+					if report != nil {
+						reportErr := report.Report(ctx, err)
 						if reportErr != nil {
 							j.log.Errorw("method", "report", "worker", work.name, "err", reportErr)
 						}
