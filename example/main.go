@@ -3,17 +3,18 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/eiixy/go-job/report/qyweixin"
+	"golang.org/x/time/rate"
 	syslog "log"
 	"os"
 	"time"
 
 	"github.com/eiixy/go-job"
-	"github.com/eiixy/go-job/report/qyweixin"
 	"github.com/go-kratos/kratos/v2/log"
-	"golang.org/x/time/rate"
 )
 
 func main() {
+	var index int
 	j := job.NewJob(
 		log.DefaultLogger,
 		job.NewWorker("test", example),
@@ -28,6 +29,25 @@ func main() {
 			job.WithLimiter(rate.NewLimiter(rate.Every(time.Second), 1)),
 			job.WithReport(qyweixin.NewReport(os.Getenv("QY_WECHAT_TOKEN"))),
 		),
+		job.NewWorker("test-loop", func(ctx context.Context) error {
+			limiter := rate.NewLimiter(rate.Every(2*time.Second), 3)
+			index++
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				default:
+					if limiter.Allow() {
+						if time.Now().Second()%30 == 0 {
+							return errors.New("test-loop error")
+						}
+						syslog.Println(index, "do...")
+					} else {
+						time.Sleep(time.Second)
+					}
+				}
+			}
+		}, job.WithLimiterDuration(10*time.Second)),
 	)
 	err := j.Start(context.Background())
 	if err != nil {

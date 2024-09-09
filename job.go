@@ -63,11 +63,11 @@ func (j Job) run(ctx context.Context, work *Worker) {
 			if !ok {
 				err = fmt.Errorf("%v", r)
 			}
-			j.log.Error(err, "panic", "stack", "...\n"+string(buf))
+			j.log.Errorw("worker", work.name, "err", "panic stack...\n"+string(buf))
 			if work.reportError != nil {
-				reportErr := work.reportError.Report(ctx, fmt.Errorf("panic:\nerror: %s\nstack: %s", err, buf))
+				reportErr := work.reportError.Report(ctx, fmt.Errorf("panic:\nerror: %s\nworker: %s\nstack: %s", err, work.name, buf))
 				if reportErr != nil {
-					j.log.Errorw("method", "report", "err", reportErr)
+					j.log.Errorw("method", "report", "worker", work.name, "err", reportErr)
 				}
 			}
 		}
@@ -83,10 +83,10 @@ func (j Job) run(ctx context.Context, work *Worker) {
 					if work.reportError != nil {
 						reportErr := work.reportError.Report(ctx, err)
 						if reportErr != nil {
-							j.log.Errorw("method", "report", "err", reportErr)
+							j.log.Errorw("method", "report", "worker", work.name, "err", reportErr)
 						}
 					}
-					j.log.Error(err)
+					j.log.Errorw("worker", work.name, "error", err)
 				}
 			} else {
 				time.Sleep(work.sleep)
