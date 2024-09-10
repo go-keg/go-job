@@ -47,8 +47,8 @@ func NewReport(token string, opts ...ReportFunc) *Report {
 	return r
 }
 
-func (r Report) Report(ctx context.Context, err error) error {
-	return r.sendText(ctx, err.Error())
+func (r Report) Report(ctx context.Context, worker, content string) error {
+	return r.sendText(ctx, worker+":\n"+content)
 }
 
 func (r Report) sendText(ctx context.Context, content string) error {

@@ -8,7 +8,7 @@ import (
 )
 
 type ReportError interface {
-	Report(ctx context.Context, err error) error
+	Report(ctx context.Context, worker, content string) error
 }
 
 type Worker struct {
