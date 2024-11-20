@@ -15,6 +15,7 @@ type Job struct {
 	works       []*Worker
 	reportError ReportError
 	log         *log.Helper
+	cancel      context.CancelFunc
 }
 
 func NewJob(logger log.Logger, works ...*Worker) *Job {
@@ -32,10 +33,11 @@ func NewJobWithReport(logger log.Logger, report ReportError, works ...*Worker) *
 	}
 }
 
-func (j Job) Start(ctx context.Context) error {
+func (j *Job) Start(ctx context.Context) error {
 	if len(j.works) == 0 {
 		return nil
 	}
+	ctx, j.cancel = context.WithCancel(ctx)
 	var wg sync.WaitGroup
 	for _, item := range j.works {
 		wg.Add(1)
@@ -62,7 +64,13 @@ func (j Job) Start(ctx context.Context) error {
 	return nil
 }
 
-func (j Job) run(ctx context.Context, work *Worker) {
+func (j *Job) Stop() {
+	if j.cancel != nil {
+		j.cancel()
+	}
+}
+
+func (j *Job) run(ctx context.Context, work *Worker) {
 	defer func() {
 		if r := recover(); r != nil {
 			const size = 64 << 10
