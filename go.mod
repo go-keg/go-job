@@ -1,4 +1,4 @@
-module github.com/eiixy/go-job
+module github.com/go-keg/go-job
 
 go 1.22.0
 
