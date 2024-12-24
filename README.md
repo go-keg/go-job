@@ -5,7 +5,7 @@
 ### Install
 
 ```shell
-go get github.com/eiixy/go-job
+go get github.com/go-keg/go-job
 ```
 
 ### Example
@@ -20,11 +20,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-keg/go-job"
+	"github.com/go-keg/go-job/report"
 	"github.com/go-kratos/kratos/v2/log"
 	"golang.org/x/time/rate"
-
-	"github.com/eiixy/go-job"
-	"github.com/eiixy/go-job/report"
 )
 
 func main() {

@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/eiixy/go-job/report/qyweixin"
-	"golang.org/x/time/rate"
 	syslog "log"
 	"os"
 	"time"
 
-	"github.com/eiixy/go-job"
+	job "github.com/go-keg/go-job"
+	"github.com/go-keg/go-job/report/qyweixin"
 	"github.com/go-kratos/kratos/v2/log"
+	"golang.org/x/time/rate"
 )
 
 func main() {
