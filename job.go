@@ -50,7 +50,7 @@ func (j *Job) Start(ctx context.Context) error {
 				default:
 					if worker.reStartLimiter.Allow() {
 						if os.Getenv("JOB_ENABLE") != "false" {
-							j.log.Info("start job:", worker.name)
+							j.log.Debug("start job:", worker.name)
 							j.run(ctx, worker)
 						}
 					} else {
@@ -99,6 +99,7 @@ func (j *Job) run(ctx context.Context, work *Worker) {
 			return
 		default:
 			if work.limiter.Allow() {
+				j.log.Debugw("method", "run_worker", "worker", work.name)
 				err := work.job(ctx)
 				if err != nil {
 					report := work.reportError
